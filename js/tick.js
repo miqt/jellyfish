@@ -1,34 +1,26 @@
 // JavaScript Document
-function getCurrentTime() {
-  localParam.millis = new Date().getTime();
-  localParam.timeNow = new Date().getTime();
-  if (localParam.lastTime != 0) {
-    localParam.elapsed = localParam.timeNow - localParam.lastTime;
-    localParam.currentTime =localParam.millis%100000000 / 1000;
+var currentTime = 0;
+var loop32Frame = 0;
+var lastTime = 0;
+var yRot = 0;
+
+function animate() {
+  var millis = new Date().getTime();
+  var timeNow = new Date().getTime();
+  if (lastTime != 0) {
+    var elapsed = timeNow - lastTime;
+    currentTime = millis%100000000 / 1000;
+		yRot += (2 * elapsed) / 1000.0;
   }
-  localParam.lastTime = localParam.timeNow;
-
-  localParam.cycle32 = parseInt(localParam.currentTime*30 % 32 + 1);
-  localParam.fps = 1000.0/localParam.elapsed;
-  localParam.fpsAverage = (localParam.fpsAverage*9+localParam.fps)/10;
-  $("#frameRate").text(pad2(localParam.fpsAverage));
+  lastTime = timeNow;
+  loop32Frame = parseInt(currentTime*30 % 32 + 1);
+  $("#current-time").text(parseInt(currentTime));
+  $("#frameRate").text(parseInt(1000.0/elapsed));
 }
 
-function tick(){
-  getCurrentTime();
-  setTimeUniform(localParam.currentTime);
+function tick() {
+  animate();
+  setTimeUniform();
+  updateLighing();
+  drawScene();
 }
-
-function animate(){
-        requestAnimFrame( animate );
-        tick();
-        drawScene();
-}
-
-window.requestAnimFrame = (function(){
-	return  window.requestAnimationFrame || 
-	window.webkitRequestAnimationFrame   || 
-	window.mozRequestAnimationFrame      || 
-	window.oRequestAnimationFrame        || 
-	window.msRequestAnimationFrame
-})();

@@ -1,43 +1,61 @@
-var mWorld = new M4x4.$();
-var mViewInv = new M4x4.$();
-var mProjection = new M4x4.$();
-var mWorldView = new M4x4.$();
-var mWorldViewProj = new M4x4.$();
-var mTemp = new M4x4.$();
+var world = new Matrix4x4();
+var view = new Matrix4x4();
+var viewInv = new Matrix4x4();
+var projection = new Matrix4x4();
+var worldView = new Matrix4x4();
+var worldViewProj = new Matrix4x4();
+var worldInvTranspose = new Matrix4x4();
 
-var joint0 = new M4x4.$();
-var joint1 = new M4x4.$();
-var joint2 = new M4x4.$();
-var joint3 = new M4x4.$();
-var joint0InvTranspose = new M4x4.$();
-
-function setTimeUniform(time){
-  gl.uniform1f(currentProgram.currentTime, time);
-}
-function setjTimeUniform(time){
-  gl.uniform1f(currentProgram.currentJellyfishTime, time);
+function setWorldUniform(){
+	gl.uniformMatrix4fv(shaderProgram.world, gl.FALSE, new Float32Array(world.elements));
 }
 
-function setJointUniforms(){
-  gl.uniformMatrix4fv(currentProgram.joint0, gl.FALSE, new Float32Array(joint0));
-  gl.uniformMatrix4fv(currentProgram.joint1, gl.FALSE, new Float32Array(joint1));
-  gl.uniformMatrix4fv(currentProgram.joint2, gl.FALSE, new Float32Array(joint2));
-  gl.uniformMatrix4fv(currentProgram.joint3, gl.FALSE, new Float32Array(joint3));
+function setWorldViewUniform(){
+	worldView.loadIdentity();
+	worldView.multiply(world);
+  worldView.multiply(view);
+	gl.uniformMatrix4fv(shaderProgram.worldView, gl.FALSE, new Float32Array(worldView.elements));
+}
 
-  M4x4.inverseOrthonormal(joint0,joint0InvTranspose);
-  M4x4.transpose(joint0InvTranspose,joint0InvTranspose);
-  gl.uniformMatrix4fv(currentProgram.joint0InvTranspose, gl.FALSE, new Float32Array(joint0InvTranspose));
+function setWorldInvTransposeUniform(){
+  worldInvTranspose = world.inverse();
+  worldInvTranspose.transpose();
+  gl.uniformMatrix4fv(shaderProgram.worldInvTranspose, gl.FALSE, new Float32Array(worldInvTranspose.elements));
+}
+
+function setWorldViewProjUniform(){
+	gl.uniformMatrix4fv(shaderProgram.worldViewProj, gl.FALSE, new Float32Array(worldViewProj.elements));
+}
+
+function setViewInvUniform(){
+  viewInv = view.inverse();
+	gl.uniformMatrix4fv(shaderProgram.viewInv, gl.FALSE, new Float32Array(viewInv.elements));
+}
+
+function setTimeUniform(){
+	gl.uniform1f(shaderProgram.currentTime, currentTime);
 }
 
 function setMatrixUniforms(){
-  // Set necessary matrices
-  M4x4.mul(mView,mWorld,mWorldView);
-  M4x4.mul(mProjection,mWorldView,mWorldViewProj);
-  M4x4.inverseOrthonormal(mView,mViewInv);
-
+  // Compute necessary matrices
+  // worldView
+  worldView.loadIdentity();
+  worldView.multiply(world);
+  worldView.multiply(view);
+  // worldViewProj
+  worldViewProj.loadIdentity();
+  worldViewProj.multiply(world);
+  worldViewProj.multiply(view);
+  worldViewProj.multiply(projection);
+  // WorldInvTranspose
+  worldInvTranspose = world.inverse();
+  worldInvTranspose.transpose();
+  // viewInv
+  viewInv = view.inverse();
   // Set Uniforms
-  gl.uniformMatrix4fv(currentProgram.world, gl.FALSE, new Float32Array(mWorld));
-  gl.uniformMatrix4fv(currentProgram.worldView, gl.FALSE, new Float32Array(mWorldView));
-  gl.uniformMatrix4fv(currentProgram.worldViewProj, gl.FALSE, new Float32Array(mWorldViewProj));
-  gl.uniformMatrix4fv(currentProgram.viewInv, gl.FALSE, new Float32Array(mViewInv));
+  gl.uniformMatrix4fv(shaderProgram.world, gl.FALSE, new Float32Array(world.elements));
+  gl.uniformMatrix4fv(shaderProgram.worldView, gl.FALSE, new Float32Array(worldView.elements));
+  gl.uniformMatrix4fv(shaderProgram.worldInvTranspose, gl.FALSE, new Float32Array(worldInvTranspose.elements));
+  gl.uniformMatrix4fv(shaderProgram.worldViewProj, gl.FALSE, new Float32Array(worldViewProj.elements));
+  gl.uniformMatrix4fv(shaderProgram.viewInv, gl.FALSE, new Float32Array(viewInv.elements));
 }
